@@ -15,7 +15,7 @@ void loop() {
  * 
  * 
  * PSEUDOKODE
- * Definerer variabler og I2C
+ * Definerer variabler og I2C-addresser
  * 
  * 
  * void setup(){
