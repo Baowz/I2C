@@ -5,8 +5,8 @@
 
 #define partikkel_address 0x69 
 #define rtc_address  0x68
-#define SENSOR_ADDR_OLD     0x04        // default to 0x04
-#define SENSOR_ADDR_NEW     0x19        // change i2c address to 0x19
+#define MULTIGAS_ADDR_OLD     0x04        // default to 0x04
+#define MULTIGAS_ADDR_NEW     0x19        // change i2c address to 0x19
 
 typedef struct multigasreadings {
   float co;     //ppm
@@ -23,8 +23,8 @@ multigasreadings gasread;
 
 void setup() {  
   //endring av multigas i2c-addresse kan droppes
-  gas.begin(SENSOR_ADDR_OLD);     //
-  gas.change_i2c_address(SENSOR_ADDR_NEW);
+  gas.begin(MULTIGAS_ADDR_OLD);     //
+  gas.change_i2c_address(MULTIGAS_ADDR_NEW);
   gas.powerOn();
 }
 
