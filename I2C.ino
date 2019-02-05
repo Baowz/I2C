@@ -1,10 +1,11 @@
+#include <Wire.h>
 #include <RTClib.h>
 #include <MutichannelGasSensor.h>
 
-
+int partikkel_address = 105;
 
 void setup() {
-  Serial.print("hello world!");
+
 
 }
 
