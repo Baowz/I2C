@@ -7,6 +7,14 @@
 #define rtc_address  0x68
 #define MULTIGAS_ADDR_OLD     0x04        // default to 0x04
 #define MULTIGAS_ADDR_NEW     0x19        // change i2c address to 0x19
+uint16_t rtc_year;
+uint8_t rtc_month;
+uint8_t rtc_day;
+uint8_t rtc_hour;
+uint8_t rtc_minute;
+uint8_t rtc_second;
+
+void setup() {
 
 typedef struct multigasreadings {
   float co;     //ppm
@@ -91,3 +99,20 @@ void multigas(){
  * 
  * }
  */
+
+void rtc() {
+  RTC_DS3231 rtc;
+
+  DateTime now = rtc.now();
+
+  rtc_year = now.year();
+  rtc_month = now.month();
+  rtc_day = now.day();
+  rtc_hour = now.hour();
+  rtc_minute = now.minute();
+  rtc_second = now.second();
+  
+  //return rtc_year, rtc_month, rtc_day, rtc_hour, rtc_minute, rtc_second;
+}
+ 
+
