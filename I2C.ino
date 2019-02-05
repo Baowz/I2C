@@ -26,11 +26,34 @@ void loop() {
  * void loop (){
  *  partikkelsensor();
  *  trykkogfuktighet();
- *  Ozone();
- *  VOC();
- *  RTC();
+ *  ozone();
+ *  voc();
+ *  rtc();
  *  multigas();
  * }
  * 
  * 
+ * byte partikkelsensor(){
+ * 
+ * }
+ * 
+ * byte trykkogfuktighet(){
+ * 
+ * }
+ * 
+ * byte ozone(){
+ * 
+ * }
+ * 
+ * byte voc(){
+ * 
+ * }
+ * 
+ * byte rtc(){
+ * 
+ * }
+ * 
+ * byte mutligas(){
+ * 
+ * }
  */
