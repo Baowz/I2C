@@ -1,3 +1,4 @@
+#include <Adafruit_BME280.h>
 #include <Wire.h>
 #include <RTClib.h>
 #include <MutichannelGasSensor.h>
@@ -7,7 +8,10 @@
 #define rtc_address  0x68
 #define MULTIGAS_ADDR_OLD     0x04        // default to 0x04
 #define MULTIGAS_ADDR_NEW     0x19        // change i2c address to 0x19
+#define humidity_pressure_address 0x77
+#define SEALEVELPRESSURE_HPA (1013.25)
 
+Adafruit_BME280 bme; // I2C
 
 uint16_t rtc_year;
 uint8_t rtc_month;
@@ -23,6 +27,11 @@ typedef struct multigasreadings {
   float no2;    //ppm
 };
 
+float temp;
+float pressure;
+float altitude;
+float humidity;
+
 multigasreadings gasread;
 
 void setup() {  
@@ -30,11 +39,21 @@ void setup() {
   gas.begin(MULTIGAS_ADDR_OLD);     //
   gas.change_i2c_address(MULTIGAS_ADDR_NEW);
   gas.powerOn();
+
+/*-------------bme sensor---------------*/
+  bool status;  
+  status = bme.begin();  
+  if (!status) {
+      Serial.println("Could not find a valid BME280 sensor, check wiring!");
+      while (1);
+  }
+/*-------------------------------------------------------------------*/
 }
 
 void loop() {
   multigas();
   rtc();
+  bme_sens_read();
 }
 
 
@@ -58,6 +77,13 @@ void rtc() {
   rtc_second = now.second();
   
   //return rtc_year, rtc_month, rtc_day, rtc_hour, rtc_minute, rtc_second;
+}
+
+void bme_sens_read() {
+  temp = bme.readTemperature();
+  pressure = bme.readPressure() / 100.0F;
+  altitude = bme.readAltitude(SEALEVELPRESSURE_HPA);
+  humidity = bme.readHumidity();
 }
 /*
  * 
