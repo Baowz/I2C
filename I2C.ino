@@ -15,6 +15,8 @@
 
 Adafruit_BME280 bme; // I2C
 
+MQ131 sensor(2,A0, LOW_CONCENTRATION, 10000); 
+
 uint16_t rtc_year;
 uint8_t rtc_month;
 uint8_t rtc_day;
@@ -39,10 +41,13 @@ float humidity;
 multigasreadings gasread;
 
 void setup() {  
+  Serial.begin(9600);
   //endring av multigas i2c-addresse kan droppes
   gas.begin(MULTIGAS_ADDR_OLD);     //
   gas.change_i2c_address(MULTIGAS_ADDR_NEW);
   gas.powerOn();
+
+  ozonesetup();
 
 /*-------------bme sensor---------------*/
   bool status;  
@@ -59,7 +64,6 @@ void loop() {
   multigas();
   rtc();
   bme_sens_read();
-  ozonesetup();
   ozoneread();
 }
 
@@ -100,8 +104,6 @@ void bme_sens_read() {
 // - Model LOW_CONCENTRATION
 // - Load resistance RL of 10KOhms (10000 Ohms)
 
-MQ131 sensor(2,A0, LOW_CONCENTRATION, 10000); 
-
 //Defines MQ131 sensorvalues
 
 void ozonesetup() {
@@ -127,50 +129,3 @@ void ozoneread() {
              //sensor.getO3(PPB);
 }
 
-
-/*
- * 
- * 
- * PSEUDOKODE
- * Definerer variabler og I2C-addresser
- * 
- * 
- * void setup(){
- * wire.begin();
- * 
- * }
- * 
- * void loop (){
- *  partikkelsensor();
- *  trykkogfuktighet();
- *  ozone();
- *  voc();
- *  rtc();
- *  multigas();
- * }
- * 
- * 
- * byte partikkelsensor(){
- * 
- * }
- * 
- * byte trykkogfuktighet(){
- * 
- * }
- * 
- * byte ozone(){
- * 
- * }
- * 
- * byte voc(){
- * 
- * }
- * 
- * byte rtc(){
- * 
- * }
- * 
- * byte mutligas(){
- * 
- * }
- */
