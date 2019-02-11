@@ -43,18 +43,21 @@ multigasreadings gasread;
 void setup() {  
   Serial.begin(9600);
   //endring av multigas i2c-addresse kan droppes
-  gas.begin(MULTIGAS_ADDR_OLD);     //
-  gas.change_i2c_address(MULTIGAS_ADDR_NEW);
+  //gas.begin(MULTIGAS_ADDR_OLD);     //
+  //gas.change_i2c_address(MULTIGAS_ADDR_NEW);
+  gas.begin(MULTIGAS_ADDR_NEW);//the default I2C address of the slave is 0x04
   gas.powerOn();
 
-  ozonesetup();
+
+//Ozonesetup must be edited
+ // ozonesetup();
 
 /*-------------bme sensor---------------*/
   bool status;  
   status = bme.begin();  
   if (!status) {
       Serial.println("Could not find a valid BME280 sensor, check wiring!");
-      while (1);
+      //while (1);
   }
 /*-------------------------------------------------------------------*/
 
@@ -73,6 +76,10 @@ void multigas(){
   gasread.co = gas.measure_CO();
   gasread.nh3 = gas.measure_NH3();
   gasread.no2 = gas.measure_NO2();
+    Serial.println(gas.measure_CO());
+  Serial.println(gas.measure_NH3());
+  Serial.println(gas.measure_NO2());
+  Serial.println();
 }
 
 void rtc() {
