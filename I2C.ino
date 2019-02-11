@@ -1,3 +1,7 @@
+#include <sensirion_arch_config.h>
+#include <sensirion_common.h>
+#include <sensirion_i2c.h>
+#include <Arduino.h>
 #include <Adafruit_BME280.h>
 #include <MQ131.h>  //Heater consumes at least 150 mA. So, don't connect it directly on a pin of the Arduino
 #include <Wire.h>
@@ -31,6 +35,7 @@ typedef struct multigasreadings {
   float co;     //ppm
   float nh3;    //ppm
   float no2;    //ppm
+
 };
 
 float temp;
