@@ -1,7 +1,9 @@
 #include <Adafruit_BME280.h>
+#include <MQ131.h>  //Heater consumes at least 150 mA. So, don't connect it directly on a pin of the Arduino
 #include <Wire.h>
 #include <RTClib.h>
 #include <MutichannelGasSensor.h>
+
 
 
 #define partikkel_address 0x69 
@@ -20,6 +22,8 @@ uint8_t rtc_hour;
 uint8_t rtc_minute;
 uint8_t rtc_second;
 
+
+float Ozoneppm ; //ppm
 
 typedef struct multigasreadings {
   float co;     //ppm
@@ -48,12 +52,15 @@ void setup() {
       while (1);
   }
 /*-------------------------------------------------------------------*/
+
 }
 
 void loop() {
   multigas();
   rtc();
   bme_sens_read();
+  ozonesetup();
+  ozoneread();
 }
 
 
@@ -79,12 +86,48 @@ void rtc() {
   //return rtc_year, rtc_month, rtc_day, rtc_hour, rtc_minute, rtc_second;
 }
 
+
 void bme_sens_read() {
   temp = bme.readTemperature();
   pressure = bme.readPressure() / 100.0F;
   altitude = bme.readAltitude(SEALEVELPRESSURE_HPA);
   humidity = bme.readHumidity();
 }
+
+// - Ozonedetector gasread;
+// - Heater control on chosen pin (Pin 2)
+// - Sensor analog read on chosen pin (Pin A0)
+// - Model LOW_CONCENTRATION
+// - Load resistance RL of 10KOhms (10000 Ohms)
+
+MQ131 sensor(2,A0, LOW_CONCENTRATION, 10000); 
+
+//Defines MQ131 sensorvalues
+
+void ozonesetup() {
+  
+  sensor.begin();
+  Serial.println("Calibration in progress...");
+  
+  sensor.calibrate(); //Setup for the MQ131
+                      //Example: R0 = 10kOhm
+                      //Tells time for heating. Needed for accurate reading - Usually powered for more than 24h.
+  
+  Serial.println("Calibration done!");
+  Serial.print("R0 = ");
+  Serial.print(sensor.getR0());
+  Serial.println(" Ohms");
+  Serial.print("Time to heat = ");
+  Serial.print(sensor.getTimeToRead());
+  Serial.println(" s");
+
+}
+void ozoneread() {
+  Ozoneppm = sensor.getO3(PPM); //This gives a value in parts per million, change to PPB if a more accurate value is needed
+             //sensor.getO3(PPB);
+}
+
+
 /*
  * 
  * 
@@ -131,6 +174,3 @@ void bme_sens_read() {
  * 
  * }
  */
-
-
-
