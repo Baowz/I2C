@@ -44,8 +44,8 @@ void setup() {
   Serial.begin(9600);
   
   //endring av multigas i2c-addresse kan droppes
-  gas.begin(MULTIGAS_ADDR_OLD);     //
-  gas.change_i2c_address(MULTIGAS_ADDR_NEW);
+  //gas.begin(MULTIGAS_ADDR_OLD);     //
+  //gas.change_i2c_address(MULTIGAS_ADDR_NEW);
   gas.begin(MULTIGAS_ADDR_NEW);//the default I2C address of the slave is 0x04
   gas.powerOn();
   
@@ -67,7 +67,7 @@ rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
 void loop() {
   multigas();
   rtc_read();
-  delay(500);
+  delay(1000);
   //bme_sens_read();
   //ozoneread();
 }
@@ -78,12 +78,12 @@ void multigas(){
   gasread.co = gas.measure_CO();
   gasread.nh3 = gas.measure_NH3();
   gasread.no2 = gas.measure_NO2();
- /*
+ 
   Serial.println(gas.measure_CO());
   Serial.println(gas.measure_NH3());
   Serial.println(gas.measure_NO2());
   Serial.println();
-  */
+  
 }
 
 void rtc_read() {
@@ -94,14 +94,14 @@ void rtc_read() {
   rtc_hour = now.hour();
   rtc_minute = now.minute();
   rtc_second = now.second();
-/*
+
   Serial.println(rtc_year);
   Serial.println(rtc_month);
   Serial.println(rtc_day);
   Serial.println(rtc_hour);
   Serial.println(rtc_minute);
   Serial.println(rtc_second);
-*/
+  Serial.println();
 }
 
 
