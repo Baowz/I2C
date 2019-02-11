@@ -17,12 +17,12 @@ Adafruit_BME280 bme; // I2C
 
 MQ131 sensor(2,A0, LOW_CONCENTRATION, 10000); 
 
-uint16_t rtc_year;
-uint8_t rtc_month;
-uint8_t rtc_day;
-uint8_t rtc_hour;
-uint8_t rtc_minute;
-uint8_t rtc_second;
+int rtc_year;
+int rtc_month;
+int rtc_day;
+int rtc_hour;
+int rtc_minute;
+int rtc_second;
 
 
 float Ozoneppm ; //ppm
@@ -39,16 +39,17 @@ float altitude;
 float humidity;
 
 multigasreadings gasread;
-
+ RTC_DS3231 rtc;
 void setup() {  
   Serial.begin(9600);
+  
   //endring av multigas i2c-addresse kan droppes
-  //gas.begin(MULTIGAS_ADDR_OLD);     //
-  //gas.change_i2c_address(MULTIGAS_ADDR_NEW);
+  gas.begin(MULTIGAS_ADDR_OLD);     //
+  gas.change_i2c_address(MULTIGAS_ADDR_NEW);
   gas.begin(MULTIGAS_ADDR_NEW);//the default I2C address of the slave is 0x04
   gas.powerOn();
-
-
+  
+rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
 //Ozonesetup must be edited
  // ozonesetup();
 
@@ -65,9 +66,10 @@ void setup() {
 
 void loop() {
   multigas();
-  rtc();
-  bme_sens_read();
-  ozoneread();
+  rtc_read();
+  delay(500);
+  //bme_sens_read();
+  //ozoneread();
 }
 
 
@@ -76,25 +78,30 @@ void multigas(){
   gasread.co = gas.measure_CO();
   gasread.nh3 = gas.measure_NH3();
   gasread.no2 = gas.measure_NO2();
-    Serial.println(gas.measure_CO());
+ /*
+  Serial.println(gas.measure_CO());
   Serial.println(gas.measure_NH3());
   Serial.println(gas.measure_NO2());
   Serial.println();
+  */
 }
 
-void rtc() {
-  RTC_DS3231 rtc;
-
+void rtc_read() {
   DateTime now = rtc.now();
-
   rtc_year = now.year();
   rtc_month = now.month();
   rtc_day = now.day();
   rtc_hour = now.hour();
   rtc_minute = now.minute();
   rtc_second = now.second();
-  
-  //return rtc_year, rtc_month, rtc_day, rtc_hour, rtc_minute, rtc_second;
+/*
+  Serial.println(rtc_year);
+  Serial.println(rtc_month);
+  Serial.println(rtc_day);
+  Serial.println(rtc_hour);
+  Serial.println(rtc_minute);
+  Serial.println(rtc_second);
+*/
 }
 
 
