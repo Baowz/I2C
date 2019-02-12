@@ -1,29 +1,37 @@
-#include <sps30.h>
-#include <Adafruit_BME280.h>
-#include <MQ131.h>  //Heater consumes at least 150 mA. So, don't connect it directly on a pin of the Arduino
-#include <Wire.h>
-#include <RTClib.h>
-#include <MutichannelGasSensor.h>
+//----------------------------------------------------------------
+//These are libraries needed for the different code functions
+#include <sps30.h>  //Particle sensor SPS30
+#include <Adafruit_BME280.h> //Pressure and humidity sensor
+#include <MQ131.h>  // Ozone sensor - The heater consumes at least 150 mA. So, don't connect it directly on a pin of the Arduino
+#include <Wire.h>   //Standard arduino library
+#include <RTClib.h> //Real rime clock 
+#include <MutichannelGasSensor.h> //Multigas sensor - Grove P2502 
 
-
-
-#define partikkel_address 0x69 
-#define rtc_address  0x68
+//----------------------------------------------------------------
+//I2C adresses - Crucial for multisensor communication. Change if needed.
+#define partikkel_address 0x69            // Default I2C adress
+#define rtc_address  0x68                 // Default I2C adress
 #define MULTIGAS_ADDR_OLD     0x04        // default to 0x04
-#define MULTIGAS_ADDR_NEW     0x19        // change i2c address to 0x19
-#define humidity_pressure_address 0x77
-#define SEALEVELPRESSURE_HPA (1013.25)
-#define iaqaddress 0x5A                   // VOC
+#define MULTIGAS_ADDR_NEW     0x19        // change I2C address to 0x19
+#define humidity_pressure_address 0x77    // Defrault I2C adress
+#define SEALEVELPRESSURE_HPA (1013.25)    // Defines normalized pressure
+#define iaqaddress 0x5A                   // VOC I2C adress
 
 
+//----------------------------------------------------------------
+//Spesific variables from sensor libraries 
 Adafruit_BME280 bme; // I2C
+MQ131 sensor(2,A0, LOW_CONCENTRATION, 10000); // - Ozonedetector gasread;
+                                              // - Heater control on chosen pin (Pin 2)
+                                              // - Sensor analog read on chosen pin (Pin A0)
+                                              // - Model LOW_CONCENTRATION
+                                              // - Load resistance RL of 10KOhms (10000 Ohms)
 
-MQ131 sensor(2,A0, LOW_CONCENTRATION, 10000); 
+SPS30 sps30; //I2C
 
-SPS30 sps30;
-
-
-int rtc_year;
+//----------------------------------------------------------------
+//Integers adding - Gives sign bits
+int rtc_year;       
 int rtc_month;
 int rtc_day;
 int rtc_hour;
@@ -34,7 +42,8 @@ uint16_t tvoc;       // VOC
 uint16_t predict;    // VOC
 int32_t resistance;  // VOC
 
-
+//---------------------------------------------------------------
+//Adds float; Decimal numerial - better presicison
 float Ozoneppm ; //ppm
 
 typedef struct multigasreadings {
@@ -43,24 +52,28 @@ typedef struct multigasreadings {
   float no2;    //ppm
 };
 
-float temp;
-float pressure;
-float altitude;
-float humidity;
+float temp;     //Celsius
+float pressure; //Bar
+float altitude; //Meters
+float humidity; //Percentage  
 
-multigasreadings gasread;
- RTC_DS3231 rtc;
+multigasreadings gasread; //Defines Multigrasreading
+
+RTC_DS3231 rtc; //Defines RTC 
+
+//----------------------------------------------------------------
+//Setup - This initialize variables, pin modes and libraries
 void setup() {  
-  Serial.begin(9600);
-  Wire.begin();  //starter I2C
+  Serial.begin(9600); //This is the datadrate - 9600 bit/s 
+  Wire.begin();  //starts I2C
   
   //endring av multigas i2c-addresse kan droppes
   //gas.begin(MULTIGAS_ADDR_OLD);     //
   //gas.change_i2c_address(MULTIGAS_ADDR_NEW);
-  gas.begin(MULTIGAS_ADDR_NEW);//the default I2C address of the slave is 0x04
-  gas.powerOn();
+  gas.begin(MULTIGAS_ADDR_NEW); //The default I2C address of the slave is 0x04
+  gas.powerOn(); //Function fur turning the multigas sensor on
   
-rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+rtc.adjust(DateTime(F(__DATE__), F(__TIME__))); //Adds the value of todays date and time from the connected computer to the rtc clock
 //Ozonesetup must be edited
  // ozonesetup();
 
@@ -74,56 +87,60 @@ rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
 /*-------------------------------------------------------------------*/
 
 }
-
+//--------------------------------------------------------------------
+//Declare what functions that the program is going to run
 void loop() {
-  multigas();
-  rtc_read();
-  PM_read();
-  voc();
+  
+  multigas(); //Calls for multigas function
+  rtc_read(); //Calls for clock function
+  PM_read();  //Calls for particle sensor function
+  voc();      //Calls for the VOC (CO2) sensor function
   delay(1000);
   //bme_sens_read();
   //ozoneread();
 }
 
 
+//---------------------------------------------------------------------
+//Under are the functions called for in void loop
 
-void multigas(){
-  gasread.co = gas.measure_CO();
-  gasread.nh3 = gas.measure_NH3();
-  gasread.no2 = gas.measure_NO2();
+void multigas(){                    //Multigass function
+  gasread.co = gas.measure_CO();    //Reads CO value from sensor
+  gasread.nh3 = gas.measure_NH3();  //Reads NH3 value from sensor
+  gasread.no2 = gas.measure_NO2();  //Reads NO2 value from sensor
  
-  Serial.println(gas.measure_CO());
+  Serial.println(gas.measure_CO()); //Prints to scope 
   Serial.println(gas.measure_NH3());
   Serial.println(gas.measure_NO2());
   Serial.println();
   
 }
 
-void rtc_read() {
-  DateTime now = rtc.now();
-  rtc_year = now.year();
-  rtc_month = now.month();
-  rtc_day = now.day();
-  rtc_hour = now.hour();
-  rtc_minute = now.minute();
-  rtc_second = now.second();
+void rtc_read() {                   //Real time clock function
+  DateTime now = rtc.now();         //Calls for the microcontrollers value
+  rtc_year = now.year();            //Values rtc_year with value from clock
+  rtc_month = now.month();          //Values rtc_month with value from clock
+  rtc_day = now.day();              //Values rtc_day with value from clock
+  rtc_hour = now.hour();            //Values rtc_hour with value frmo clock
+  rtc_minute = now.minute();        //Values rtc_minutes with value from clock
+  rtc_second = now.second();        //Vaøies rtc_second with value from clock
 
-  Serial.println(rtc_year);
+  Serial.println(rtc_year);         //Prints to scope
   Serial.println(rtc_month);
   Serial.println(rtc_day);
   Serial.println(rtc_hour);
   Serial.println(rtc_minute);
   Serial.println(rtc_second);
-  Serial.println();
+  Serial.println();                 //Adds a spacing at the end
 }
 
 
-void voc(){
+void voc(){                         //VOC-sensor function
 
-  readAllBytes();
-  checkStatus();
+  readAllBytes();                   //Function for reading sensor bytes
+  checkStatus();                    //Checks status (Pollutionvalue of CO2)
 
-  Serial.print("CO2:");
+  Serial.print("CO2:");             //Prints to scope
   Serial.print(predict);
   Serial.print(", Status:");
   Serial.print(statu, HEX);
@@ -135,25 +152,25 @@ void voc(){
   delay(2000);
 }
 
-void readAllBytes(){
+void readAllBytes(){               //readAllBytes function used in the VOC function
 
-  //VOC
   
-  Wire.requestFrom(iaqaddress, 9);
-
-  predict = (Wire.read()<< 8 | Wire.read()); 
-  statu = Wire.read();
-  resistance = (Wire.read()& 0x00)| (Wire.read()<<16)| (Wire.read()<<8| Wire.read());
-  tvoc = (Wire.read()<<8 | Wire.read());
+  Wire.requestFrom(iaqaddress, 9); //Requests data from the I2C adress
+  //Under values are read from the I2C of the sensor
+  
+  predict = (Wire.read()<< 8 | Wire.read());  
+  statu = Wire.read();                       
+  resistance = (Wire.read()& 0x00)| (Wire.read()<<16)| (Wire.read()<<8| Wire.read()); 
+  tvoc = (Wire.read()<<8 | Wire.read());     
 }
 
 void checkStatus(){
 
-  //VOC
+  //VOC printing sequence
   
-  if(statu == 0x10)
+  if(statu == 0x10)     // Status = Ready to read. If not = No module
   {
-    Serial.println("Warming up...");
+    Serial.println("Warming up..."); //Prints to scope
   }
   else if(statu == 0x00)
   {
@@ -172,17 +189,11 @@ void checkStatus(){
 }
 
 void bme_sens_read() {
-  temp = bme.readTemperature();
-  pressure = bme.readPressure() / 100.0F;
-  altitude = bme.readAltitude(SEALEVELPRESSURE_HPA);
-  humidity = bme.readHumidity();
+  temp = bme.readTemperature();            //Reads temperature value from sensor
+  pressure = bme.readPressure() / 100.0F;  //Calculates pressure
+  altitude = bme.readAltitude(SEALEVELPRESSURE_HPA); //Reads altitude and uses the SEALEVELPRESSURE numeral to calculate difference
+  humidity = bme.readHumidity();           //Reads humidity
 }
-
-// - Ozonedetector gasread;
-// - Heater control on chosen pin (Pin 2)
-// - Sensor analog read on chosen pin (Pin A0)
-// - Model LOW_CONCENTRATION
-// - Load resistance RL of 10KOhms (10000 Ohms)
 
 //Defines MQ131 sensorvalues
 
@@ -195,9 +206,9 @@ void ozonesetup() {
                       //Example: R0 = 10kOhm
                       //Tells time for heating. Needed for accurate reading - Usually powered for more than 24h.
   
-  Serial.println("Calibration done!");
+  Serial.println("Calibration done!"); //Prints to scope
   Serial.print("R0 = ");
-  Serial.print(sensor.getR0());
+  Serial.print(sensor.getR0());        //Fetches the R0 resistor value
   Serial.println(" Ohms");
   Serial.print("Time to heat = ");
   Serial.print(sensor.getTimeToRead());
@@ -205,15 +216,15 @@ void ozonesetup() {
 
 }
 void ozoneread() {
-  Ozoneppm = sensor.getO3(PPM); //This gives a value in parts per million, change to PPB if a more accurate value is needed
-             //sensor.getO3(PPB);
+  Ozoneppm = sensor.getO3(PPM);        //This gives a value in parts per million, change to PPB if a more accurate value is needed.
+                                       //sensor.getO3(PPB);
 }
 
-bool PM_read()
+void PM_read()                         //Particle sensor 
 {
-  static bool header = true;
-  uint8_t ret, error_cnt = 0;
-  struct sps_values val;
+  static bool header = true;           //Checks if header is "1"
+  uint8_t ret, error_cnt = 0;          //Get a byte for the ret function
+  struct sps_values val;               //Sps_values declared
 
   // loop to get data
   
@@ -224,11 +235,11 @@ bool PM_read()
   if (header) {
     Serial.println(F("-------------Mass -----------    ------------- Number --------------   -Average-"));
     Serial.println(F("     Concentration [μg/m3]             Concentration [#/cm3]             [μm]"));
-    Serial.println(F("P1.0\tP2.5\tP4.0\tP10\tP0.5\tP1.0\tP2.5\tP4.0\tP10\tPartSize\n"));
+    Serial.println(F("P1.0\tP2.5\tP4.0\tP10\tP0.5\tP1.0\tP2.5\tP4.0\tP10\tPartSize\n"));                  //Prints to scope in orderly fashion
     header = false;
   }
 
-  Serial.print(val.MassPM1);
+  Serial.print(val.MassPM1);        //Prints to scope
   Serial.print(F("\t"));
   Serial.print(val.MassPM2);
   Serial.print(F("\t"));
@@ -249,4 +260,3 @@ bool PM_read()
   Serial.print(val.PartSize);
   Serial.print(F("\n"));
 }
-
