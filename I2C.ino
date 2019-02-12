@@ -1,3 +1,4 @@
+#include <sps30.h>
 #include <Adafruit_BME280.h>
 #include <MQ131.h>  //Heater consumes at least 150 mA. So, don't connect it directly on a pin of the Arduino
 #include <Wire.h>
