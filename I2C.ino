@@ -18,6 +18,9 @@ Adafruit_BME280 bme; // I2C
 
 MQ131 sensor(2,A0, LOW_CONCENTRATION, 10000); 
 
+SPS30 sps30;
+
+
 int rtc_year;
 int rtc_month;
 int rtc_day;
@@ -68,6 +71,7 @@ rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
 void loop() {
   multigas();
   rtc_read();
+  PM_read();
   delay(1000);
   //bme_sens_read();
   //ozoneread();
@@ -142,5 +146,46 @@ void ozonesetup() {
 void ozoneread() {
   Ozoneppm = sensor.getO3(PPM); //This gives a value in parts per million, change to PPB if a more accurate value is needed
              //sensor.getO3(PPB);
+}
+
+bool PM_read()
+{
+  static bool header = true;
+  uint8_t ret, error_cnt = 0;
+  struct sps_values val;
+
+  // loop to get data
+  
+    ret = sps30.GetValues(&val);
+
+
+  // only print header first time
+  if (header) {
+    Serial.println(F("-------------Mass -----------    ------------- Number --------------   -Average-"));
+    Serial.println(F("     Concentration [μg/m3]             Concentration [#/cm3]             [μm]"));
+    Serial.println(F("P1.0\tP2.5\tP4.0\tP10\tP0.5\tP1.0\tP2.5\tP4.0\tP10\tPartSize\n"));
+    header = false;
+  }
+
+  Serial.print(val.MassPM1);
+  Serial.print(F("\t"));
+  Serial.print(val.MassPM2);
+  Serial.print(F("\t"));
+  Serial.print(val.MassPM4);
+  Serial.print(F("\t"));
+  Serial.print(val.MassPM10);
+  Serial.print(F("\t"));
+  Serial.print(val.NumPM0);
+  Serial.print(F("\t"));
+  Serial.print(val.NumPM1);
+  Serial.print(F("\t"));
+  Serial.print(val.NumPM2);
+  Serial.print(F("\t"));
+  Serial.print(val.NumPM4);
+  Serial.print(F("\t"));
+  Serial.print(val.NumPM10);
+  Serial.print(F("\t"));
+  Serial.print(val.PartSize);
+  Serial.print(F("\n"));
 }
 
