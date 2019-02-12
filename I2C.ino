@@ -92,11 +92,14 @@ rtc.adjust(DateTime(F(__DATE__), F(__TIME__))); //Adds the value of todays date 
 void loop() {
   
   multigas(); //Calls for multigas function
-  rtc_read(); //Calls for clock function
-  PM_read();  //Calls for particle sensor function
-  voc();      //Calls for the VOC (CO2) sensor function
   delay(1000);
-  //bme_sens_read();
+  rtc_read(); //Calls for clock function
+  delay(1000);
+  bme_sens_read();
+  delay(1000);
+  //PM_read();  //Calls for particle sensor function
+  //voc();      //Calls for the VOC (CO2) sensor function
+
   //ozoneread();
 }
 
@@ -105,6 +108,7 @@ void loop() {
 //Under are the functions called for in void loop
 
 void multigas(){                    //Multigass function
+  Serial.println("Multigas_sens");
   gasread.co = gas.measure_CO();    //Reads CO value from sensor
   gasread.nh3 = gas.measure_NH3();  //Reads NH3 value from sensor
   gasread.no2 = gas.measure_NO2();  //Reads NO2 value from sensor
@@ -117,6 +121,7 @@ void multigas(){                    //Multigass function
 }
 
 void rtc_read() {                   //Real time clock function
+  Serial.println("RTC");
   DateTime now = rtc.now();         //Calls for the microcontrollers value
   rtc_year = now.year();            //Values rtc_year with value from clock
   rtc_month = now.month();          //Values rtc_month with value from clock
@@ -189,10 +194,16 @@ void checkStatus(){
 }
 
 void bme_sens_read() {
+  Serial.println("BME_SENSOR");
   temp = bme.readTemperature();            //Reads temperature value from sensor
+  Serial.println(temp);
   pressure = bme.readPressure() / 100.0F;  //Calculates pressure
+  Serial.println(pressure);
   altitude = bme.readAltitude(SEALEVELPRESSURE_HPA); //Reads altitude and uses the SEALEVELPRESSURE numeral to calculate difference
+  Serial.println(altitude);
   humidity = bme.readHumidity();           //Reads humidity
+  Serial.println(humidity);
+  Serial.println();
 }
 
 //Defines MQ131 sensorvalues
