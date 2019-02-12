@@ -13,6 +13,8 @@
 #define MULTIGAS_ADDR_NEW     0x19        // change i2c address to 0x19
 #define humidity_pressure_address 0x77
 #define SEALEVELPRESSURE_HPA (1013.25)
+#define iaqaddress 0x5A                   // VOC
+
 
 Adafruit_BME280 bme; // I2C
 
@@ -27,6 +29,10 @@ int rtc_day;
 int rtc_hour;
 int rtc_minute;
 int rtc_second;
+uint8_t statu;       // VOC
+uint16_t tvoc;       // VOC
+uint16_t predict;    // VOC
+int32_t resistance;  // VOC
 
 
 float Ozoneppm ; //ppm
@@ -46,6 +52,7 @@ multigasreadings gasread;
  RTC_DS3231 rtc;
 void setup() {  
   Serial.begin(9600);
+  Wire.begin();  //starter I2C
   
   //endring av multigas i2c-addresse kan droppes
   //gas.begin(MULTIGAS_ADDR_OLD);     //
@@ -72,6 +79,7 @@ void loop() {
   multigas();
   rtc_read();
   PM_read();
+  voc();
   delay(1000);
   //bme_sens_read();
   //ozoneread();
@@ -109,6 +117,59 @@ void rtc_read() {
   Serial.println();
 }
 
+
+void voc(){
+
+  readAllBytes();
+  checkStatus();
+
+  Serial.print("CO2:");
+  Serial.print(predict);
+  Serial.print(", Status:");
+  Serial.print(statu, HEX);
+  Serial.print(", Resistance:");
+  Serial.print(resistance);
+  Serial.print(", TVoC:");
+  Serial.println(tvoc);
+
+  delay(2000);
+}
+
+void readAllBytes(){
+
+  //VOC
+  
+  Wire.requestFrom(iaqaddress, 9);
+
+  predict = (Wire.read()<< 8 | Wire.read()); 
+  statu = Wire.read();
+  resistance = (Wire.read()& 0x00)| (Wire.read()<<16)| (Wire.read()<<8| Wire.read());
+  tvoc = (Wire.read()<<8 | Wire.read());
+}
+
+void checkStatus(){
+
+  //VOC
+  
+  if(statu == 0x10)
+  {
+    Serial.println("Warming up...");
+  }
+  else if(statu == 0x00)
+  {
+    Serial.println("Ready");  
+  }
+  else if(statu == 0x01)
+  {
+    Serial.println("Busy");  
+  }
+  else if(statu == 0x80)
+  {
+    Serial.println("Error");  
+  }
+  else
+  Serial.println("No Status, check module");  
+}
 
 void bme_sens_read() {
   temp = bme.readTemperature();
