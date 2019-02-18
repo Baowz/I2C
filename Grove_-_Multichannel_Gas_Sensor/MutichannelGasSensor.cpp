@@ -45,6 +45,12 @@ void MutichannelGasSensor::begin(int address)
     r0_inited = false;
 
     Wire.begin();
+
+	Wire.beginTransmission(i2cAddress); // transmit to device
+	Wire.write(0x23);              // sends one byte
+	Wire.write(address);              // sends one byte
+	Wire.endTransmission();
+
     i2cAddress = address;
     __version = getVersion();
 }

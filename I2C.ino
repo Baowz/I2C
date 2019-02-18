@@ -17,18 +17,6 @@
 #define SEALEVELPRESSURE_HPA (1013.25)    // Defines normalized pressure
 #define iaqaddress 0x5A                   // VOC I2C adress
 
-
-//----------------------------------------------------------------
-//Spesific variables from sensor libraries 
-Adafruit_BME280 bme; // I2C
-MQ131 sensor(2,A0, LOW_CONCENTRATION, 10000); // - Ozonedetector gasread;
-                                              // - Heater control on chosen pin (Pin 2)
-                                              // - Sensor analog read on chosen pin (Pin A0)
-                                              // - Model LOW_CONCENTRATION
-                                              // - Load resistance RL of 10KOhms (10000 Ohms)
-
-SPS30 sps30; //I2C
-
 //----------------------------------------------------------------
 //Integers adding - Gives sign bits
 int rtc_year;       
@@ -41,56 +29,52 @@ uint8_t statu;       // VOC
 uint16_t tvoc;       // VOC
 uint16_t predict;    // VOC
 int32_t resistance;  // VOC
-
-//---------------------------------------------------------------
-//Adds float; Decimal numerial - better presicison
 float Ozoneppm ; //ppm
+float temp;     //Celsius
+float pressure; //Bar
+float altitude; //Meters
+float humidity; //Percentage 
 
 typedef struct multigasreadings {
   float co;     //ppm
   float nh3;    //ppm
   float no2;    //ppm
 };
-
-float temp;     //Celsius
-float pressure; //Bar
-float altitude; //Meters
-float humidity; //Percentage  
-
 multigasreadings gasread; //Defines Multigrasreading
 
+//----------------------------------------------------------------
+//Spesific variables from sensor libraries 
+Adafruit_BME280 bme; // I2C
+SPS30 sps30; //I2C
 RTC_DS3231 rtc; //Defines RTC 
+MQ131 sensor(2,A0, LOW_CONCENTRATION, 10000); // - Ozonedetector gasread;
+                                              // - Heater control on chosen pin (Pin 2)
+                                              // - Sensor analog read on chosen pin (Pin A0)
+                                              // - Model LOW_CONCENTRATION
+                                              // - Load resistance RL of 10KOhms (10000 Ohms)
 
 //----------------------------------------------------------------
 //Setup - This initialize variables, pin modes and libraries
 void setup() {  
   Serial.begin(9600); //This is the datadrate - 9600 bit/s 
   Wire.begin();  //starts I2C
-  
-  //endring av multigas i2c-addresse kan droppes
-  //gas.begin(MULTIGAS_ADDR_OLD);     //
-  //gas.change_i2c_address(MULTIGAS_ADDR_NEW);
   gas.begin(MULTIGAS_ADDR_NEW); //The default I2C address of the slave is 0x04
   gas.powerOn(); //Function fur turning the multigas sensor on
-  
-rtc.adjust(DateTime(F(__DATE__), F(__TIME__))); //Adds the value of todays date and time from the connected computer to the rtc clock
-//Ozonesetup must be edited
- // ozonesetup();
+  rtc.adjust(DateTime(F(__DATE__), F(__TIME__))); //Adds the value of todays date and time from the connected computer to the rtc clock
+  rtc.begin();
 
-/*-------------bme sensor---------------*/
   bool status;  
   status = bme.begin();  
   if (!status) {
       Serial.println("Could not find a valid BME280 sensor, check wiring!");
-      //while (1);
   }
-/*-------------------------------------------------------------------*/
-
+  
+  //ozonesetup();
 }
+
 //--------------------------------------------------------------------
 //Declare what functions that the program is going to run
 void loop() {
-  
   multigas(); //Calls for multigas function
   delay(1000);
   rtc_read(); //Calls for clock function
@@ -98,9 +82,11 @@ void loop() {
   bme_sens_read();
   delay(1000);
   //PM_read();  //Calls for particle sensor function
+  delay(1000);
   //voc();      //Calls for the VOC (CO2) sensor function
-
+  delay(1000);
   //ozoneread();
+  delay(1000);
 }
 
 
@@ -142,8 +128,8 @@ void rtc_read() {                   //Real time clock function
 
 void voc(){                         //VOC-sensor function
 
-  readAllBytes();                   //Function for reading sensor bytes
-  checkStatus();                    //Checks status (Pollutionvalue of CO2)
+  readAllBytes_voc();                   //Function for reading sensor bytes
+  checkStatus_voc();                    //Checks status (Pollutionvalue of CO2)
 
   Serial.print("CO2:");             //Prints to scope
   Serial.print(predict);
@@ -153,23 +139,20 @@ void voc(){                         //VOC-sensor function
   Serial.print(resistance);
   Serial.print(", TVoC:");
   Serial.println(tvoc);
-
-  delay(2000);
+  //delay(2000);
 }
 
-void readAllBytes(){               //readAllBytes function used in the VOC function
-
+void readAllBytes_voc(){               //readAllBytes function used in the VOC function
   
   Wire.requestFrom(iaqaddress, 9); //Requests data from the I2C adress
-  //Under values are read from the I2C of the sensor
-  
+  //Under values are read from the I2C of the sensor  
   predict = (Wire.read()<< 8 | Wire.read());  
   statu = Wire.read();                       
   resistance = (Wire.read()& 0x00)| (Wire.read()<<16)| (Wire.read()<<8| Wire.read()); 
   tvoc = (Wire.read()<<8 | Wire.read());     
 }
 
-void checkStatus(){
+void checkStatus_voc(){
 
   //VOC printing sequence
   
@@ -207,9 +190,7 @@ void bme_sens_read() {
 }
 
 //Defines MQ131 sensorvalues
-
 void ozonesetup() {
-  
   sensor.begin();
   Serial.println("Calibration in progress...");
   
