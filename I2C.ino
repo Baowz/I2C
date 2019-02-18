@@ -69,7 +69,7 @@ void setup() {
       Serial.println("Could not find a valid BME280 sensor, check wiring!");
   }
   
-  //ozonesetup();
+  ozonesetup();
 }
 
 //--------------------------------------------------------------------
@@ -81,11 +81,11 @@ void loop() {
   delay(1000);
   bme_sens_read();
   delay(1000);
-  //PM_read();  //Calls for particle sensor function
+  PM_read();  //Calls for particle sensor function
   delay(1000);
-  //voc();      //Calls for the VOC (CO2) sensor function
+  voc();      //Calls for the VOC (CO2) sensor function
   delay(1000);
-  //ozoneread();
+  ozoneread();
   delay(1000);
 }
 
@@ -129,7 +129,7 @@ void rtc_read() {                   //Real time clock function
 void voc(){                         //VOC-sensor function
 
   readAllBytes_voc();                   //Function for reading sensor bytes
-  checkStatus_voc();                    //Checks status (Pollutionvalue of CO2)
+  //checkStatus_voc();                    //Checks status (Pollutionvalue of CO2)
 
   Serial.print("CO2:");             //Prints to scope
   Serial.print(predict);
@@ -139,6 +139,7 @@ void voc(){                         //VOC-sensor function
   Serial.print(resistance);
   Serial.print(", TVoC:");
   Serial.println(tvoc);
+  Serial.println();                 //Adds a spacing at the end
   //delay(2000);
 }
 
