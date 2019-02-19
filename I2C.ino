@@ -75,14 +75,14 @@ void setup() {
 void loop() {
   multigas(); //Calls for multigas function
   delay(1000);
-  rtc_read(); //Calls for clock function
-  delay(1000);
-  bme_sens_read();
-  delay(1000);
+//  rtc_read(); //Calls for clock function
+//  delay(1000);
+//  bme_sens_read();
+//  delay(1000);
   voc();      //Calls for the VOC (CO2) sensor function
   delay(1000);
-  ozoneread();
-  delay(1000);
+//  ozoneread();
+//  delay(1000);
 }
 
 
@@ -125,7 +125,7 @@ void rtc_read() {                   //Real time clock function
 void voc(){                         //VOC-sensor function
 
   readAllBytes_voc();                   //Function for reading sensor bytes
-  //checkStatus_voc();                    //Checks status (Pollutionvalue of CO2)
+  checkStatus_voc();                    //Checks status (Pollutionvalue of CO2)
   Serial.println("VOC");
   Serial.print("CO2:");             //Prints to scope
   Serial.print(predict);
