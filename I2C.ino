@@ -9,7 +9,6 @@
 
 //----------------------------------------------------------------
 //I2C adresses - Crucial for multisensor communication. Change if needed.
-#define partikkel_address 0x69            // Default I2C adress
 #define rtc_address  0x68                 // Default I2C adress
 #define MULTIGAS_ADDR_OLD     0x04        // default to 0x04
 #define MULTIGAS_ADDR_NEW     0x19        // change I2C address to 0x19
@@ -61,14 +60,14 @@ void setup() {
   gas.powerOn(); //Function fur turning the multigas sensor on
   rtc.adjust(DateTime(F(__DATE__), F(__TIME__))); //Adds the value of todays date and time from the connected computer to the rtc clock
   rtc.begin();
- Serial.print("HEI");
   bool status;  
   status = bme.begin();  
   if (!status) {
       Serial.println("Could not find a valid BME280 sensor, check wiring!");
   }
   
-  ozonesetup();
+//  ozonesetup();
+  Serial.println();
 }
 
 //--------------------------------------------------------------------
@@ -127,7 +126,7 @@ void voc(){                         //VOC-sensor function
 
   readAllBytes_voc();                   //Function for reading sensor bytes
   //checkStatus_voc();                    //Checks status (Pollutionvalue of CO2)
-
+  Serial.println("VOC");
   Serial.print("CO2:");             //Prints to scope
   Serial.print(predict);
   Serial.print(", Status:");
