@@ -1,11 +1,11 @@
 //----------------------------------------------------------------
 //These are libraries needed for the different code functions
-#include <sps30.h>  //Particle sensor SPS30
 #include <Adafruit_BME280.h> //Pressure and humidity sensor
 #include <MQ131.h>  // Ozone sensor - The heater consumes at least 150 mA. So, don't connect it directly on a pin of the Arduino
 #include <Wire.h>   //Standard arduino library
 #include <RTClib.h> //Real rime clock 
 #include <MutichannelGasSensor.h> //Multigas sensor - Grove P2502 
+
 
 //----------------------------------------------------------------
 //I2C adresses - Crucial for multisensor communication. Change if needed.
@@ -45,7 +45,6 @@ multigasreadings gasread; //Defines Multigrasreading
 //----------------------------------------------------------------
 //Spesific variables from sensor libraries 
 Adafruit_BME280 bme; // I2C
-SPS30 sps30; //I2C
 RTC_DS3231 rtc; //Defines RTC 
 MQ131 sensor(2,A0, LOW_CONCENTRATION, 10000); // - Ozonedetector gasread;
                                               // - Heater control on chosen pin (Pin 2)
@@ -62,31 +61,29 @@ void setup() {
   gas.powerOn(); //Function fur turning the multigas sensor on
   rtc.adjust(DateTime(F(__DATE__), F(__TIME__))); //Adds the value of todays date and time from the connected computer to the rtc clock
   rtc.begin();
-
+ Serial.print("HEI");
   bool status;  
   status = bme.begin();  
   if (!status) {
       Serial.println("Could not find a valid BME280 sensor, check wiring!");
   }
   
-  //ozonesetup();
+  ozonesetup();
 }
 
 //--------------------------------------------------------------------
 //Declare what functions that the program is going to run
 void loop() {
-//  multigas(); //Calls for multigas function
-//  delay(1000);
-//  rtc_read(); //Calls for clock function
-//  delay(1000);
-//  bme_sens_read();
-//  delay(1000);
-  PM_read();  //Calls for particle sensor function
+  multigas(); //Calls for multigas function
   delay(1000);
-//  voc();      //Calls for the VOC (CO2) sensor function
-//  delay(1000);
-//  ozoneread();
-//  delay(1000);
+  rtc_read(); //Calls for clock function
+  delay(1000);
+  bme_sens_read();
+  delay(1000);
+  voc();      //Calls for the VOC (CO2) sensor function
+  delay(1000);
+  ozoneread();
+  delay(1000);
 }
 
 
@@ -213,43 +210,4 @@ void ozoneread() {
                                        //sensor.getO3(PPB);
 }
 
-void PM_read()                         //Particle sensor 
-{
-  static bool header = true;           //Checks if header is "1"
-  uint8_t ret, error_cnt = 0;          //Get a byte for the ret function
-  struct sps_values val;               //Sps_values declared
 
-  // loop to get data
-  
-    ret = sps30.GetValues(&val);
-
-
-  // only print header first time
-  if (header) {
-    Serial.println(F("-------------Mass -----------    ------------- Number --------------   -Average-"));
-    Serial.println(F("     Concentration [μg/m3]             Concentration [#/cm3]             [μm]"));
-    Serial.println(F("P1.0\tP2.5\tP4.0\tP10\tP0.5\tP1.0\tP2.5\tP4.0\tP10\tPartSize\n"));                  //Prints to scope in orderly fashion
-    header = false;
-  }
-
-  Serial.print(val.MassPM1);        //Prints to scope
-  Serial.print(F("\t"));
-  Serial.print(val.MassPM2);
-  Serial.print(F("\t"));
-  Serial.print(val.MassPM4);
-  Serial.print(F("\t"));
-  Serial.print(val.MassPM10);
-  Serial.print(F("\t"));
-  Serial.print(val.NumPM0);
-  Serial.print(F("\t"));
-  Serial.print(val.NumPM1);
-  Serial.print(F("\t"));
-  Serial.print(val.NumPM2);
-  Serial.print(F("\t"));
-  Serial.print(val.NumPM4);
-  Serial.print(F("\t"));
-  Serial.print(val.NumPM10);
-  Serial.print(F("\t"));
-  Serial.print(val.PartSize);
-  Serial.print(F("\n"));
-}
